@@ -198,17 +198,33 @@ button {
 }
 
 .day-title {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
-  padding: 12px;
+  padding: 12px 14px;
   border-radius: 8px;
   background: #f5f8fb;
 }
 
+.day-title div {
+  min-width: 0;
+}
+
+.day-title span {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1f5f8f;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .timeline {
   display: grid;
-  gap: 12px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -216,25 +232,78 @@ button {
 
 .timeline-item {
   display: grid;
-  grid-template-columns: 58px 1fr;
+  grid-template-columns: 66px minmax(0, 1fr);
   gap: 10px;
+  align-items: start;
+}
+
+.time-rail {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+  min-height: 100%;
+  padding-top: 8px;
+}
+
+.timeline-item:not(:last-child) .time-rail::after {
+  content: "";
+  position: absolute;
+  top: 28px;
+  right: 7px;
+  bottom: -8px;
+  width: 2px;
+  border-radius: 999px;
+  background: #d5dbe3;
 }
 
 .time {
-  color: #1f5f8f;
-  font-size: 0.9rem;
-  font-weight: 900;
-  line-height: 1.4;
-  padding-top: 11px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-self: start;
+  align-items: center;
+  justify-content: flex-end;
+  width: 42px;
+  min-height: 22px;
+  padding-top: 1px;
+  box-sizing: border-box;
+  color: #526176;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.25;
   text-align: right;
+}
+
+.time-dot {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #1f5f8f;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.timeline-content {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
 }
 
 .plan-card {
   min-width: 0;
   padding: 12px;
-  border: 1px solid #dfe6ee;
+  border: 1px solid #e5ebf2;
   border-radius: 8px;
   background: #ffffff;
+  box-shadow: 0 8px 18px rgba(24, 38, 58, 0.1);
 }
 
 .plan-card-header {
@@ -242,7 +311,15 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.plan-card-header > span {
+  color: #172033;
+  font-size: 0.92rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.04em;
 }
 
 .plan-card-header button,
@@ -254,27 +331,63 @@ button {
   font-weight: 800;
 }
 
-.plan-card p {
-  color: #3f4e63;
+.note-block,
+.transport {
+  display: grid;
+  gap: 6px;
+  border-radius: 8px;
   font-size: 0.95rem;
+  line-height: 1.62;
+}
+
+.note-block {
+  padding: 9px 10px;
+  background: #f5f8fb;
+  color: #34445b;
+}
+
+.note-block p,
+.transport p {
+  color: inherit;
   white-space: pre-line;
+}
+
+.block-label {
+  display: inline-flex;
+  width: fit-content;
+  color: #68778d;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
 }
 
 .transport {
   display: grid;
-  gap: 4px;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  background: #f7f2e9;
-  color: #554536;
-  font-size: 0.92rem;
-  white-space: pre-line;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 7px 2px 4px;
+  background: transparent;
+  color: #526176;
+  line-height: 1.5;
 }
 
-.transport span {
-  color: #8b5b20;
-  font-size: 0.78rem;
+.transport .block-label {
+  color: #68778d;
+}
+
+.route-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: #e9f1f8;
+  color: #1f5f8f;
+  font-size: 0.95rem;
   font-weight: 900;
 }
 
@@ -641,7 +754,26 @@ button:focus-visible {
   }
 
   .timeline-item {
-    grid-template-columns: 48px 1fr;
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .time {
+    width: 36px;
+    font-size: 0.76rem;
+  }
+
+  .timeline-item:not(:last-child) .time-rail::after {
+    right: 7px;
+  }
+
+  .plan-card {
+    padding: 12px;
+  }
+
+  .note-block,
+  .transport {
+    font-size: 0.93rem;
   }
 
   .shopping-form {

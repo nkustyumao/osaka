@@ -772,32 +772,55 @@ function App() {
           </div>
 
           <div className="day-title">
-            <p>{currentDay.label}</p>
-            <h3>
-              {currentDay.date} {currentDay.title}
-            </h3>
+            <div>
+              <p>{currentDay.label}</p>
+              <h3>
+                {currentDay.date} {currentDay.title}
+              </h3>
+            </div>
+            <span>{currentDay.items.length} 段行程</span>
           </div>
 
           <ol className="timeline">
-            {currentDay.items.map((item) => (
+            {currentDay.items.map((item, index) => (
               <li key={item.id} className="timeline-item">
-                <div className="time">{item.time}</div>
-                <div className="plan-card">
-                  <div className="plan-card-header">
-                    <h4>{item.place}</h4>
-                  </div>
-                  {item.note && <p>{item.note}</p>}
-                  <div className="transport">
-                    <span>交通</span>
-                    {item.transport}
-                  </div>
-                  {item.links?.length > 0 && (
-                    <div className="plan-links" aria-label="相關連結">
-                      {item.links.map((link) => (
-                        <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
-                          {link.label}
-                        </a>
-                      ))}
+                <div className="time-rail">
+                  <time className="time">{item.time}</time>
+                  <span className="time-dot">{index + 1}</span>
+                </div>
+
+                <div className="timeline-content">
+                  <article className="plan-card">
+                    <div className="plan-card-header">
+                      <h4>{item.place}</h4>
+                      <span aria-hidden="true">•••</span>
+                    </div>
+                    {item.note && (
+                      <div className="note-block">
+                        <span className="block-label">重點</span>
+                        <p>{item.note}</p>
+                      </div>
+                    )}
+                    {item.links?.length > 0 && (
+                      <div className="plan-links" aria-label="相關連結">
+                        {item.links.map((link) => (
+                          <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+                            {link.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+
+                  {item.transport && (
+                    <div className="transport">
+                      <span className="route-icon" aria-hidden="true">
+                        →
+                      </span>
+                      <div>
+                        <span className="block-label">交通 / 路線</span>
+                        <p>{item.transport}</p>
+                      </div>
                     </div>
                   )}
                 </div>
