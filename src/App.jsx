@@ -18,7 +18,7 @@ const defaultTrip = {
         {
           id: "d1-1",
           time: "06:00-07:00",
-          place: "高雄機場報到",
+          place: "高雄機場報到 請自行取好前置量",
           note: "・護照 / 機票 / 登機證\n・Visit Japan Web QR Code\n・日本 SIM / eSIM",
           transport: "國際線航廈",
         },
@@ -26,7 +26,7 @@ const defaultTrip = {
           id: "d1-2",
           time: "07:00-10:30",
           place: "高雄（KHH）→ 關西（KIX）",
-          note: "托運後準備入境 Visit Japan Web QR Code",
+          note: "入境",
           transport: "航班（飛行約 3.5 小時）",
         },
         {
@@ -41,7 +41,35 @@ const defaultTrip = {
           time: "11:40-12:00",
           place: "KIX → 臨空城 Rinku-Town",
           note: "出站後步行約 6 分鐘至臨空城 Outlets",
-          transport: "南海電鐵 空港急行 或 JR 關空快速（搭乘 1 站，車程約 6 分）",
+          transport:
+            "班次南海電鐵 1139 關空快速 1131 1147 有車\n南海電鐵 空港急行 1、2號月臺 或 JR 關空快速 3、4號月臺搭乘 1 站至臨空城站，車程約 5 分",
+          fare: "JPY 370 円",
+          transit: [
+            {
+              from: "關西機場站",
+              to: "臨空城站",
+              line: "南海電鐵 空港急行",
+              platform: "1、2 號月台",
+              duration: "約 5 分鐘",
+              fare: "JPY 370 円",
+              note: "可搭 11:39 班次",
+            },
+            {
+              from: "關西機場站",
+              to: "臨空城站",
+              line: "JR 關空快速",
+              platform: "3、4 號月台",
+              duration: "約 5 分鐘",
+              fare: "JPY 370 円",
+              note: "可搭 11:31 / 11:47 班次",
+            },
+          ],
+          links: [
+            {
+              label: "乘車路線",
+              url: "https://japantravel.navitime.com/zh-tw/area/jp/route/result/?start=00001353&goal=00000143&start_name=%E9%97%9C%E8%A5%BF%E6%A9%9F%E5%A0%B4&goal_name=%E8%87%A8%E7%A9%BA%E5%9F%8E&cid=&from=route_result_search_box&date_time=2026-09-27T11%3A30&airplane=false&shinkansen=false&airport_bus=false&city_bus=false&highway_bus=false&ferry=false&taxi=false",
+            },
+          ],
         },
         {
           id: "d1-5",
@@ -56,14 +84,40 @@ const defaultTrip = {
           place: "臨空城 → 飯店",
           note: "・電車時間約 40 分鐘\n・轉乘與步行約 10-15 分鐘\n・總計約 55-70 分鐘",
           transport:
-            "1. 搭乘「南海電鐵 空港急行」至「天下茶屋站」\n2. 站內轉乘「Osaka Metro 堺筋線」至「日本橋站」\n3. 5 號或 10 號出口步行約 3-5 分鐘抵達飯店",
+            "時間 1603 跟 1615 有車\n1. 臨空城站「4號月臺」搭乘「南海電鐵 空港急行」至「天下茶屋站」JPY 780 \n2. 站內轉乘「Osaka Metro 堺筋線」至「日本橋站」JPY 240\n3. 5 號或 10 號出口步行約 3-5 分鐘抵達飯店",
+          fare: "南海電鐵 JPY 780 円 Osaka Metro JPY 240 円",
+          transit: [
+            {
+              from: "臨空城站",
+              to: "天下茶屋站",
+              line: "南海電鐵 空港急行",
+              platform: "4 號月台",
+              duration: "約 35-40 分鐘",
+              fare: "JPY 780 円",
+              note: "可搭 16:03 / 16:15 班次",
+            },
+            {
+              from: "天下茶屋站",
+              to: "日本橋站",
+              line: "Osaka Metro 堺筋線",
+              duration: "約 5 分鐘",
+              fare: "JPY 240 円",
+              note: "抵達後走 5 號或 10 號出口，步行約 3-5 分鐘到飯店",
+            },
+          ],
+          links: [
+            {
+              label: "乘車路線",
+              url: "https://japantravel.navitime.com/zh-tw/area/jp/route/result/?start=00000143&goal=00007296&start_name=%E8%87%A8%E7%A9%BA%E5%9F%8E&goal_name=%E6%97%A5%E6%9C%AC%E6%A9%8B(%E5%A4%A7%E9%98%AA%E5%BA%9C)&cid=&from=route_result_search_box&date_time=2026-09-27T16%3A00&airplane=false&shinkansen=false&airport_bus=false&city_bus=false&highway_bus=false&ferry=false&taxi=false",
+            },
+          ],
         },
         {
           id: "d1-7",
           time: "17:00-17:40",
           place: "飯店 Check-in",
           note: "彈性時間可稍坐休息或有特別想逛的可以先去晃晃",
-          transport: "無",
+          transport: "休息",
         },
         {
           id: "d1-8",
@@ -109,7 +163,45 @@ const defaultTrip = {
           place: "飯店 → 大阪歷史博物館",
           note: "車程＋轉乘步行約 20-25 分鐘",
           transport:
-            "1.「日本橋站」搭「Osaka Metro 堺筋線」至「堺筋本町站」\n2. 轉乘「中央線」至「谷町四丁目站」9 號出口",
+            "班次 0902\n1.日本橋站 搭 Osaka Metro 堺筋線 至 堺筋本町站 車程約 9 分鐘\n2. 轉乘 中央線 至 谷町四丁目站 9 號出口 車程約 1 分鐘",
+          fare: "費用 JPY 190 円 ",
+          transit: [
+            {
+              from: "日本橋站",
+              to: "堺筋本町站",
+              line: "Osaka Metro 堺筋線",
+              platform: "2 號月台",
+              duration: "約 9 分鐘",
+              note: "09:02 09:06 班次 開往	高槻市(阪急線) 8節編組 8 號車廂",
+            },
+            {
+              from: "堺筋本町站",
+              to: "谷町四丁目站",
+              line: "Osaka Metro 中央線",
+              platform: "1 號月台",
+              duration: "約 1 分鐘",
+              fare: "JPY 190 円",
+              exit: "9 號出口",
+              note: "開往	生駒 6節編組",
+            },
+            {
+              from: "日本橋站",
+              to: "谷町九丁目",
+              line: "OsakaMetro千日前線",
+              platform: "1 號月台",
+              duration: "約 1 分鐘",
+              note: "09:05 班次開往	南巽 4 節編組 4 號車廂",
+            },
+            {
+              from: "谷町九丁目",
+              to: "谷町四丁目站",
+              line: "Osaka Metro 中央線",
+              platform: "2 號月台",
+              duration: "約 3 分鐘",
+              fare: "JPY 190 円",
+              note: "開往	大日 6 節編組 9 號出口出站",
+            },
+          ],
         },
         {
           id: "d2-3",
@@ -166,6 +258,26 @@ const defaultTrip = {
           place: "大阪城 → 新世界",
           note: "出站即達新世界商圈與通天閣本通",
           transport: "步行至周邊地鐵站搭乘「Osaka Metro 堺筋線」直達「惠美須町站」3 號出口",
+          transit: [
+            {
+              from: "大阪商務園區",
+              to: "長堀橋",
+              line: "OsakaMetro長堀鶴見綠地線",
+              platform: "2 號月台",
+              duration: "約 9 分鐘",
+              note: "大正(大阪府) 4節編組 1 號車廂",
+            },
+            {
+              from: "長堀橋",
+              to: "恵美須町",
+              line: "OsakaMetro界筋線",
+              platform: "1 號月台",
+              exit: "3 號出口",
+              fare: "JPY 240 円",
+              duration: "約 4 分鐘",
+              note: "開往天下茶屋 8 節編組 1 號車廂",
+            },
+          ],
         },
         {
           id: "d2-11",
@@ -187,6 +299,18 @@ const defaultTrip = {
           place: "返回飯店",
           note: "從 8 號出口出站，步行返回飯店休息",
           transport: "「惠美須町站」搭乘「Osaka Metro 堺筋線」至「日本橋站」",
+          transit: [
+            {
+              from: "惠美須町站",
+              to: "日本橋站",
+              line: "Osaka Metro 堺筋線",
+              platform: "2 號月台",
+              duration: "約 2 分鐘",
+              fare: "JPY 190 円",
+              exit: "8 號出口",
+              note: "開往北千里8節編組",
+            },
+          ],
         },
       ],
     },
@@ -209,6 +333,26 @@ const defaultTrip = {
           place: "飯店出發 → 梅田",
           note: "總車程＋轉乘步行約 25-30 分鐘",
           transport: "1.「日本橋站」搭「Osaka Metro 千日前線」至「難波站」\n2. 站內轉乘「御堂筋線」至「梅田站」",
+          transit: [
+            {
+              from: "日本橋站",
+              to: "難波站",
+              line: "Osaka Metro 千日前線",
+              duration: "約 1 分鐘",
+              platform: "2 號月台",
+              note: "開往	野田阪神 4節編組 3、4號車廂",
+            },
+            {
+              from: "難波站",
+              to: "梅田站",
+              line: "Osaka Metro 御堂筋線",
+              duration: "約 9 分鐘",
+              platform: "2 號月台",
+              fare: "JPY 240 円",
+              exit: "5 號出口",
+              note: "開往	新大阪 10節編組",
+            },
+          ],
         },
         {
           id: "d3-3",
@@ -228,8 +372,8 @@ const defaultTrip = {
         {
           id: "d3-5",
           time: "11:00-12:00",
-          place: "YONEX SHOWROOM / 自由活動",
-          note: "・YONEX SHOWROOM Maps\n・自由活動",
+          place: "自由活動",
+          note: "",
           transport: "Grand Front Osaka 南館 B1F",
         },
         {
@@ -274,6 +418,25 @@ const defaultTrip = {
           place: "返回飯店",
           note: "回飯店休息、整理戰利品",
           transport: "1.「梅田站」搭乘「Osaka Metro 御堂筋線」至「難波站」\n2. 轉乘「千日前線」至「日本橋站」出站",
+          transit: [
+            {
+              from: "梅田站",
+              to: "難波站",
+              line: "Osaka Metro 御堂筋線",
+              platform: "1 號月台",
+              duration: "約 8 分鐘",
+              note: "開往	中百舌鳥 10節編組 9 號車廂",
+            },
+            {
+              from: "難波站",
+              to: "日本橋站",
+              line: "Osaka Metro 千日前線",
+              platform: "1 號月台",
+              duration: "約 1 分鐘",
+              fare: "JPY 240 円",
+              note: "開往	南巽 4節編組",
+            },
+          ],
         },
       ],
     },
@@ -466,6 +629,26 @@ const defaultTrip = {
           place: "南海難波 → 關西機場（KIX）",
           note: "・班次選擇：\n1. 特急 Rapit：全車指定席，車程約 38 分鐘（需加購特急券）\n2. 空港急行：一般通勤電車，車程約 44 分鐘（刷 ICOCA 即可）\n・預計 09:00 前後抵達關西機場站",
           transport: "搭乘「南海電鐵」直達「關西機場站」",
+          transit: [
+            {
+              from: "難波(南海線)",
+              to: "關西機場站",
+              line: "南海本線機場急行",
+              platform: "5 號月台",
+              duration: "約 47 分鐘",
+              fare: "JPY 970 円",
+              note: "班次 0802 0817 開往關西機場",
+            },
+            {
+              from: "難波(南海線)",
+              to: "關西機場站",
+              line: "南海電鐵 空港急行",
+              platform: "9 號月台",
+              duration: "約 39 分鐘",
+              fare: "座位 JPY 700 円 乘車 JPY 970 円 共 JPY 1,670 円",
+              note: "班次 0800 開往關西機場",
+            },
+          ],
         },
         {
           id: "d6-5",
@@ -559,8 +742,7 @@ const pretripChecklist = {
   suggested: [
     { id: "umbrella", text: "雨傘或輕便雨衣" },
     { id: "tissue", text: "濕紙巾 / 面紙" },
-    { id: "shopping-bag", text: "購物袋 " },
-    { id: "luggage-scale", text: "行李秤" },
+    { id: "shopping-bag", text: "購物袋" },
     { id: "coin-pouch", text: "小零錢包" },
     { id: "adapter", text: "轉接頭 / 延長線" },
     { id: "backup-glasses", text: "備用眼鏡 / 隱形眼鏡用品" },
@@ -631,7 +813,7 @@ function toYenNumber(value) {
 }
 
 function formatYen(value) {
-  return `¥${new Intl.NumberFormat("ja-JP").format(value)}`;
+  return `¥ ${new Intl.NumberFormat("ja-JP").format(value)}`;
 }
 
 function getSafeLinkHref(link) {
@@ -751,6 +933,89 @@ function getDayProgress(day, now) {
     text: "時間到後會自動標示目前行程",
     statuses,
   };
+}
+
+function TransitDetails({ item }) {
+  if (item.transit?.length > 0) {
+    return (
+      <div className="transit-card" aria-label="交通資訊">
+        <span className="block-label">交通 / 路線</span>
+        <div className="transit-leg-list">
+          {item.transit.map((leg, legIndex) => (
+            <article className="transit-leg" key={`${item.id}-transit-${legIndex}`}>
+              <div className="transit-route">
+                <strong>{leg.from}</strong>
+                <span aria-hidden="true">→</span>
+                <strong>{leg.to}</strong>
+              </div>
+
+              <dl className="transit-grid">
+                {leg.line && (
+                  <div className="wide-detail">
+                    <dt>搭乘</dt>
+                    <dd>{leg.line}</dd>
+                  </div>
+                )}
+                {leg.platform && (
+                  <div>
+                    <dt>月台</dt>
+                    <dd>{leg.platform}</dd>
+                  </div>
+                )}
+                {leg.direction && (
+                  <div>
+                    <dt>方向</dt>
+                    <dd>{leg.direction}</dd>
+                  </div>
+                )}
+                {leg.boarding && (
+                  <div>
+                    <dt>上車</dt>
+                    <dd>{leg.boarding}</dd>
+                  </div>
+                )}
+                {leg.duration && (
+                  <div>
+                    <dt>車程</dt>
+                    <dd>{leg.duration}</dd>
+                  </div>
+                )}
+                {leg.exit && (
+                  <div>
+                    <dt>出口</dt>
+                    <dd>{leg.exit}</dd>
+                  </div>
+                )}
+                {leg.fare && (
+                  <div>
+                    <dt>費用</dt>
+                    <dd>{leg.fare}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {leg.note && <p className="transit-note">{leg.note}</p>}
+            </article>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!item.transport) return null;
+
+  return (
+    <div className="transport">
+      <span className="route-icon" aria-hidden="true">
+        →
+      </span>
+      <div>
+        <span className="block-label">交通 / 路線</span>
+        <p>{item.transport}</p>
+        {item.fare && <p className="fare-line">{item.fare}</p>}
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -1054,24 +1319,24 @@ function App() {
         <button type="button" className={page === "itinerary" ? "active" : ""} onClick={() => setPage("itinerary")}>
           行程規劃
         </button>
-        <button type="button" className={page === "travel" ? "active" : ""} onClick={() => setPage("travel")}>
-          住宿機票
+        <button type="button" className={page === "accounting" ? "active" : ""} onClick={() => setPage("accounting")}>
+          簡易記帳
+          <span>{expenses.length}</span>
         </button>
         <button type="button" className={page === "shopping" ? "active" : ""} onClick={() => setPage("shopping")}>
           購買清單
           <span>{remainingShopping}</span>
         </button>
-        <button type="button" className={page === "pretrip" ? "active" : ""} onClick={() => setPage("pretrip")}>
-          行前確認
-          <span>{remainingPretrip}</span>
-        </button>
         <button type="button" className={page === "notes" ? "active" : ""} onClick={() => setPage("notes")}>
           個人筆記
           <span>{notes.length}</span>
         </button>
-        <button type="button" className={page === "accounting" ? "active" : ""} onClick={() => setPage("accounting")}>
-          簡易記帳
-          <span>{expenses.length}</span>
+        <button type="button" className={page === "travel" ? "active" : ""} onClick={() => setPage("travel")}>
+          住宿機票
+        </button>
+        <button type="button" className={page === "pretrip" ? "active" : ""} onClick={() => setPage("pretrip")}>
+          行前確認
+          <span>{remainingPretrip}</span>
         </button>
       </nav>
 
@@ -1151,17 +1416,7 @@ function App() {
                       )}
                     </article>
 
-                    {item.transport && (
-                      <div className="transport">
-                        <span className="route-icon" aria-hidden="true">
-                          →
-                        </span>
-                        <div>
-                          <span className="block-label">交通 / 路線</span>
-                          <p>{item.transport}</p>
-                        </div>
-                      </div>
-                    )}
+                    <TransitDetails item={item} />
                   </div>
                 </li>
               );
