@@ -4,6 +4,8 @@ import "./App.css";
 const STORAGE_KEY = "osaka-trip-planner-v1";
 const SHOPPING_STORAGE_KEY = "osaka-trip-shopping-v1";
 const PRETRIP_STORAGE_KEY = "osaka-trip-pretrip-v1";
+const NOTES_STORAGE_KEY = "osaka-trip-notes-v1";
+const ACCOUNTING_STORAGE_KEY = "osaka-trip-accounting-v1";
 
 const defaultTrip = {
   itinerary: [
@@ -571,6 +573,8 @@ const pretripChecklist = {
 
 const pretripItems = [...pretripChecklist.must, ...pretripChecklist.suggested];
 
+const TRIP_YEAR = 2026;
+
 function getInitialShopping() {
   try {
     const saved = localStorage.getItem(SHOPPING_STORAGE_KEY);
@@ -595,24 +599,171 @@ function getInitialPretripStatus() {
   }
 }
 
+function getInitialNotes() {
+  try {
+    const saved = localStorage.getItem(NOTES_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getInitialAccounting() {
+  try {
+    const saved = localStorage.getItem(ACCOUNTING_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : { totalJpy: "", expenses: [] };
+  } catch {
+    return { totalJpy: "", expenses: [] };
+  }
+}
+
 function makeId(prefix) {
   return `${prefix}-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`;
 }
 
-const formatHeaderTime = () =>
-  new Date().toLocaleTimeString("zh-TW", {
+function sanitizeYenInput(value) {
+  return String(value ?? "").replace(/[^\d]/g, "");
+}
+
+function toYenNumber(value) {
+  const numeric = Number(sanitizeYenInput(value));
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatYen(value) {
+  return `¥${new Intl.NumberFormat("ja-JP").format(value)}`;
+}
+
+function getSafeLinkHref(link) {
+  const trimmed = link?.trim();
+  if (!trimmed) return "";
+
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    const url = new URL(withProtocol);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+const formatHeaderTime = (date) =>
+  date.toLocaleTimeString("zh-TW", {
     hour12: true,
     hour: "2-digit",
     minute: "2-digit",
   });
 
+function getTripDate(day) {
+  const [month, date] = day.date.split("/").map(Number);
+  return new Date(TRIP_YEAR, month - 1, date);
+}
+
+function compareLocalDate(left, right) {
+  const leftDate = new Date(left.getFullYear(), left.getMonth(), left.getDate()).getTime();
+  const rightDate = new Date(right.getFullYear(), right.getMonth(), right.getDate()).getTime();
+  return Math.sign(leftDate - rightDate);
+}
+
+function parseClockToMinutes(value) {
+  const match = value?.match(/(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function getItemStartMinutes(item) {
+  return parseClockToMinutes(item.time);
+}
+
+function getItemEndMinutes(item, itemIndex, items) {
+  const endMatch = item.time.match(/[-–—]\s*(\d{1,2}):(\d{2})/);
+  if (endMatch) return Number(endMatch[1]) * 60 + Number(endMatch[2]);
+
+  const nextStart = getItemStartMinutes(items[itemIndex + 1]);
+  if (nextStart !== null) return nextStart;
+
+  return 24 * 60;
+}
+
+function getProgressStatus(day, item, itemIndex, items, now) {
+  const tripDate = getTripDate(day);
+  const dateCompare = compareLocalDate(now, tripDate);
+  if (dateCompare < 0) return "upcoming";
+  if (dateCompare > 0) return "done";
+
+  const startMinutes = getItemStartMinutes(item);
+  if (startMinutes === null) return "upcoming";
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const endMinutes = getItemEndMinutes(item, itemIndex, items);
+  if (currentMinutes < startMinutes) return "upcoming";
+  if (currentMinutes >= endMinutes) return "done";
+  return "current";
+}
+
+function getDayProgress(day, now) {
+  const tripDate = getTripDate(day);
+  const dateCompare = compareLocalDate(now, tripDate);
+  const statuses = day.items.map((item, index) => getProgressStatus(day, item, index, day.items, now));
+  const currentIndex = statuses.indexOf("current");
+
+  if (dateCompare < 0) {
+    return {
+      className: "upcoming",
+      label: `${day.date} 尚未開始`,
+      text: "當天會依時間自動標示目前行程",
+      statuses,
+    };
+  }
+
+  if (dateCompare > 0) {
+    return {
+      className: "done",
+      label: `${day.date} 已完成`,
+      text: `共 ${day.items.length} 段行程`,
+      statuses,
+    };
+  }
+
+  if (currentIndex >= 0) {
+    return {
+      className: "current",
+      label: `現在 ${formatHeaderTime(now)}`,
+      text: `目前：${day.items[currentIndex].place}`,
+      statuses,
+    };
+  }
+
+  const doneCount = statuses.filter((status) => status === "done").length;
+  if (doneCount === day.items.length) {
+    return {
+      className: "done",
+      label: "今日行程已結束",
+      text: "可以回飯店整理戰利品了",
+      statuses,
+    };
+  }
+
+  return {
+    className: "upcoming",
+    label: "今日行程尚未開始",
+    text: "時間到後會自動標示目前行程",
+    statuses,
+  };
+}
+
 function App() {
   const [shopping, setShopping] = useState(getInitialShopping);
   const [pretripStatus, setPretripStatus] = useState(getInitialPretripStatus);
+  const [notes, setNotes] = useState(getInitialNotes);
+  const [accounting, setAccounting] = useState(getInitialAccounting);
   const [page, setPage] = useState("itinerary");
   const [activeDay, setActiveDay] = useState(defaultTrip.itinerary[0].id);
   const [newShoppingItem, setNewShoppingItem] = useState("");
-  const [currentTime, setCurrentTime] = useState(formatHeaderTime());
+  const [newNote, setNewNote] = useState({ title: "", link: "", content: "" });
+  const [newExpense, setNewExpense] = useState({ title: "", amount: "", method: "cash" });
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     localStorage.setItem(SHOPPING_STORAGE_KEY, JSON.stringify(shopping));
@@ -621,6 +772,14 @@ function App() {
   useEffect(() => {
     localStorage.setItem(PRETRIP_STORAGE_KEY, JSON.stringify(pretripStatus));
   }, [pretripStatus]);
+
+  useEffect(() => {
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+  }, [notes]);
+
+  useEffect(() => {
+    localStorage.setItem(ACCOUNTING_STORAGE_KEY, JSON.stringify(accounting));
+  }, [accounting]);
 
   useEffect(() => {
     const context = document.modelContext;
@@ -680,12 +839,97 @@ function App() {
       },
     });
 
+    register({
+      name: "add_personal_note",
+      title: "Add personal note",
+      description: "Add one personal travel note with optional link and content.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          title: { type: "string", minLength: 1 },
+          link: { type: "string" },
+          content: { type: "string" },
+        },
+        required: ["title"],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute(input) {
+        const title = input?.title?.trim();
+        if (!title) throw new Error("title is required");
+
+        const note = {
+          id: makeId("note"),
+          title,
+          link: input?.link?.trim() ?? "",
+          content: input?.content?.trim() ?? "",
+          createdAt: new Date().toISOString(),
+        };
+        setNotes((current) => [note, ...current]);
+        return { note };
+      },
+    });
+
+    register({
+      name: "set_total_jpy",
+      title: "Set total JPY cash",
+      description: "Set the total cash amount in Japanese yen for the trip accounting page.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          totalJpy: { type: "number", minimum: 0 },
+        },
+        required: ["totalJpy"],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute(input) {
+        const totalJpy = Math.max(0, Math.floor(Number(input?.totalJpy) || 0));
+        setAccounting((current) => ({ ...current, totalJpy: String(totalJpy) }));
+        return { totalJpy };
+      },
+    });
+
+    register({
+      name: "add_expense",
+      title: "Add expense",
+      description: "Add one Japan trip expense as cash or card.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          title: { type: "string", minLength: 1 },
+          amount: { type: "number", minimum: 1 },
+          method: { type: "string", enum: ["cash", "card"] },
+        },
+        required: ["title", "amount", "method"],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute(input) {
+        const title = input?.title?.trim();
+        const amount = Math.max(0, Math.floor(Number(input?.amount) || 0));
+        const method = input?.method === "card" ? "card" : "cash";
+        if (!title) throw new Error("title is required");
+        if (amount <= 0) throw new Error("amount must be greater than 0");
+
+        const expense = {
+          id: makeId("expense"),
+          title,
+          amount,
+          method,
+          createdAt: new Date().toISOString(),
+        };
+        setAccounting((current) => ({ ...current, expenses: [expense, ...(current.expenses ?? [])] }));
+        return { expense };
+      },
+    });
+
     return () => lifecycle.abort();
   }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setCurrentTime(formatHeaderTime());
+      setNow(new Date());
     }, 30000);
 
     return () => window.clearInterval(timer);
@@ -695,6 +939,8 @@ function App() {
     () => defaultTrip.itinerary.find((day) => day.id === activeDay) ?? defaultTrip.itinerary[0],
     [activeDay],
   );
+
+  const progressInfo = useMemo(() => getDayProgress(currentDay, now), [currentDay, now]);
 
   function addShoppingItem(event) {
     event.preventDefault();
@@ -713,10 +959,82 @@ function App() {
     setShopping((current) => current.filter((item) => item.id !== itemId));
   }
 
+  function updateNewNote(field, value) {
+    setNewNote((current) => ({ ...current, [field]: value }));
+  }
+
+  function addNote(event) {
+    event.preventDefault();
+    const title = newNote.title.trim();
+    const link = newNote.link.trim();
+    const content = newNote.content.trim();
+    if (!title && !link && !content) return;
+
+    setNotes((current) => [
+      {
+        id: makeId("note"),
+        title: title || "未命名筆記",
+        link,
+        content,
+        createdAt: new Date().toISOString(),
+      },
+      ...current,
+    ]);
+    setNewNote({ title: "", link: "", content: "" });
+  }
+
+  function removeNote(noteId) {
+    setNotes((current) => current.filter((note) => note.id !== noteId));
+  }
+
+  function updateTotalJpy(value) {
+    setAccounting((current) => ({ ...current, totalJpy: sanitizeYenInput(value) }));
+  }
+
+  function updateNewExpense(field, value) {
+    setNewExpense((current) => ({ ...current, [field]: field === "amount" ? sanitizeYenInput(value) : value }));
+  }
+
+  function addExpense(event) {
+    event.preventDefault();
+    const title = newExpense.title.trim();
+    const amount = toYenNumber(newExpense.amount);
+    if (!title && amount <= 0) return;
+    if (amount <= 0) return;
+
+    const expense = {
+      id: makeId("expense"),
+      title: title || "未命名花費",
+      amount,
+      method: newExpense.method === "card" ? "card" : "cash",
+      createdAt: new Date().toISOString(),
+    };
+
+    setAccounting((current) => ({ ...current, expenses: [expense, ...(current.expenses ?? [])] }));
+    setNewExpense({ title: "", amount: "", method: "cash" });
+  }
+
+  function removeExpense(expenseId) {
+    setAccounting((current) => ({
+      ...current,
+      expenses: (current.expenses ?? []).filter((expense) => expense.id !== expenseId),
+    }));
+  }
+
   const remainingShopping = shopping.filter((item) => !item.done).length;
   const mustRemaining = pretripChecklist.must.filter((item) => !pretripStatus[item.id]).length;
   const suggestedRemaining = pretripChecklist.suggested.filter((item) => !pretripStatus[item.id]).length;
   const remainingPretrip = mustRemaining + suggestedRemaining;
+  const expenses = accounting.expenses ?? [];
+  const totalJpy = toYenNumber(accounting.totalJpy);
+  const cashSpent = expenses
+    .filter((expense) => expense.method === "cash")
+    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const cardSpent = expenses
+    .filter((expense) => expense.method === "card")
+    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const totalSpent = cashSpent + cardSpent;
+  const remainingJpy = totalJpy - cashSpent;
 
   function togglePretripItem(itemId) {
     setPretripStatus((current) => ({ ...current, [itemId]: !current[itemId] }));
@@ -728,7 +1046,7 @@ function App() {
         <div>
           <p className="eyebrow">Japan 9/27 - 10/2</p>
           <h1>大阪京都鐵支團</h1>
-          <time style={{ fontSize: "1.2em", color: "black", font: "bold" }}>{currentTime}</time>
+          <time style={{ fontSize: "1.2em", color: "black", font: "bold" }}>{formatHeaderTime(now)}</time>
         </div>
       </header>
 
@@ -746,6 +1064,14 @@ function App() {
         <button type="button" className={page === "pretrip" ? "active" : ""} onClick={() => setPage("pretrip")}>
           行前確認
           <span>{remainingPretrip}</span>
+        </button>
+        <button type="button" className={page === "notes" ? "active" : ""} onClick={() => setPage("notes")}>
+          個人筆記
+          <span>{notes.length}</span>
+        </button>
+        <button type="button" className={page === "accounting" ? "active" : ""} onClick={() => setPage("accounting")}>
+          簡易記帳
+          <span>{expenses.length}</span>
         </button>
       </nav>
 
@@ -781,51 +1107,65 @@ function App() {
             <span>{currentDay.items.length} 段行程</span>
           </div>
 
+          <div className={`progress-preview ${progressInfo.className}`}>
+            <span>{progressInfo.label}</span>
+            <strong>{progressInfo.text}</strong>
+          </div>
+
           <ol className="timeline">
-            {currentDay.items.map((item, index) => (
-              <li key={item.id} className="timeline-item">
-                <div className="time-rail">
-                  <time className="time">{item.time}</time>
-                  <span className="time-dot">{index + 1}</span>
-                </div>
+            {currentDay.items.map((item, index) => {
+              const progressStatus = progressInfo.statuses[index] ?? "upcoming";
 
-                <div className="timeline-content">
-                  <article className="plan-card">
-                    <div className="plan-card-header">
-                      <h4>{item.place}</h4>
-                      <span aria-hidden="true">•••</span>
-                    </div>
-                    {item.note && (
-                      <div className="note-block">
-                        <span className="block-label">重點</span>
-                        <p>{item.note}</p>
+              return (
+                <li key={item.id} className={`timeline-item ${progressStatus}`}>
+                  <div className="time-rail">
+                    <time className="time">{item.time}</time>
+                    <span className="time-dot">{index + 1}</span>
+                  </div>
+
+                  <div className="timeline-content">
+                    <article className="plan-card">
+                      <div className="plan-card-header">
+                        <div className="plan-title">
+                          <h4>{item.place}</h4>
+                          {progressStatus === "current" && <span className="now-badge">現在</span>}
+                        </div>
+                        <span className="more-dots" aria-hidden="true">
+                          •••
+                        </span>
+                      </div>
+                      {item.note && (
+                        <div className="note-block">
+                          {/* <span className="block-label">重點</span> */}
+                          <p>{item.note}</p>
+                        </div>
+                      )}
+                      {item.links?.length > 0 && (
+                        <div className="plan-links" aria-label="相關連結">
+                          {item.links.map((link) => (
+                            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+                              {link.label}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+
+                    {item.transport && (
+                      <div className="transport">
+                        <span className="route-icon" aria-hidden="true">
+                          →
+                        </span>
+                        <div>
+                          <span className="block-label">交通 / 路線</span>
+                          <p>{item.transport}</p>
+                        </div>
                       </div>
                     )}
-                    {item.links?.length > 0 && (
-                      <div className="plan-links" aria-label="相關連結">
-                        {item.links.map((link) => (
-                          <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
-                            {link.label}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </article>
-
-                  {item.transport && (
-                    <div className="transport">
-                      <span className="route-icon" aria-hidden="true">
-                        →
-                      </span>
-                      <div>
-                        <span className="block-label">交通 / 路線</span>
-                        <p>{item.transport}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </section>
       )}
@@ -1001,6 +1341,78 @@ function App() {
         </section>
       )}
 
+      {page === "notes" && (
+        <section className="panel" aria-labelledby="notes-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="notes-title">個人筆記</h2>
+            </div>
+            <p className="summary-pill">{notes.length} 則</p>
+          </div>
+
+          <form className="note-form" onSubmit={addNote}>
+            <label className="note-field">
+              標題
+              <input
+                value={newNote.title}
+                onChange={(event) => updateNewNote("title", event.target.value)}
+                placeholder="例如：想去的咖啡廳"
+              />
+            </label>
+
+            <label className="note-field">
+              Link
+              <input
+                value={newNote.link}
+                onChange={(event) => updateNewNote("link", event.target.value)}
+                placeholder="貼 Google Maps、訂位頁或參考連結"
+                inputMode="url"
+              />
+            </label>
+
+            <label className="note-field wide">
+              內容
+              <textarea
+                value={newNote.content}
+                onChange={(event) => updateNewNote("content", event.target.value)}
+                placeholder="補充想記下來的資訊"
+              />
+            </label>
+
+            <button className="primary-button" type="submit">
+              新增筆記
+            </button>
+          </form>
+
+          {notes.length === 0 ? (
+            <p className="empty-state">還沒有筆記，可以先把臨時想到的店家、路線或注意事項放這裡。</p>
+          ) : (
+            <ul className="notes-list">
+              {notes.map((note) => {
+                const safeLink = getSafeLinkHref(note.link);
+
+                return (
+                  <li className="note-card" key={note.id}>
+                    <div className="note-card-header">
+                      <h3>{note.title}</h3>
+                      <button type="button" aria-label={`刪除 ${note.title}`} onClick={() => removeNote(note.id)}>
+                        刪除
+                      </button>
+                    </div>
+                    {safeLink && (
+                      <a className="note-link" href={safeLink} target="_blank" rel="noreferrer">
+                        開啟連結
+                      </a>
+                    )}
+                    {note.content && <p>{note.content}</p>}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
       {page === "shopping" && (
         <section className="panel" aria-labelledby="shopping-title">
           <div className="section-heading">
@@ -1034,6 +1446,98 @@ function App() {
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {page === "accounting" && (
+        <section className="panel" aria-labelledby="accounting-title">
+          <div className="section-heading">
+            <div>
+              <h2 id="accounting-title">簡易記帳</h2>
+            </div>
+            {/* <p className="summary-pill">剩餘 {formatYen(remainingJpy)}</p> */}
+          </div>
+
+          <div className="money-summary" aria-label="花費摘要">
+            <article className="money-card main">
+              <span>剩餘日幣</span>
+              <strong className={remainingJpy < 0 ? "danger" : ""}>{formatYen(remainingJpy)}</strong>
+            </article>
+            <article className="money-card">
+              <span>現金花費</span>
+              <strong>{formatYen(cashSpent)}</strong>
+            </article>
+            <article className="money-card">
+              <span>刷卡花費</span>
+              <strong>{formatYen(cardSpent)}</strong>
+            </article>
+            <article className="money-card total">
+              <span>總花費</span>
+              <strong>{formatYen(totalSpent)}</strong>
+            </article>
+          </div>
+
+          <label className="accounting-total-field">
+            總日幣
+            <input
+              value={accounting.totalJpy ?? ""}
+              onChange={(event) => updateTotalJpy(event.target.value)}
+              inputMode="numeric"
+              placeholder="輸入目前身上的日幣現金"
+            />
+          </label>
+
+          <form className="expense-form" onSubmit={addExpense}>
+            <label>
+              項目
+              <input
+                value={newExpense.title}
+                onChange={(event) => updateNewExpense("title", event.target.value)}
+                placeholder="例如：午餐"
+              />
+            </label>
+
+            <label>
+              金額
+              <input
+                value={newExpense.amount}
+                onChange={(event) => updateNewExpense("amount", event.target.value)}
+                inputMode="numeric"
+                placeholder="例如：1200"
+              />
+            </label>
+
+            <label className="wide">
+              付款方式
+              <select value={newExpense.method} onChange={(event) => updateNewExpense("method", event.target.value)}>
+                <option value="cash">現金</option>
+                <option value="card">刷卡</option>
+              </select>
+            </label>
+
+            <button className="primary-button" type="submit">
+              新增記帳
+            </button>
+          </form>
+
+          {expenses.length === 0 ? (
+            <p className="empty-state">還沒有記帳，先輸入總日幣，再把現金或刷卡花費逐筆加進來。</p>
+          ) : (
+            <ul className="expense-list">
+              {expenses.map((expense) => (
+                <li className={`expense-item ${expense.method}`} key={expense.id}>
+                  <div>
+                    <strong>{expense.title}</strong>
+                    <span>{expense.method === "cash" ? "現金" : "刷卡"}</span>
+                  </div>
+                  <div className="expense-amount">{formatYen(expense.amount)}</div>
+                  <button type="button" aria-label={`刪除 ${expense.title}`} onClick={() => removeExpense(expense.id)}>
+                    刪除
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
     </main>
