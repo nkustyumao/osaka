@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import { formatHeaderTime, getDateKey, getDayProgress, getSelectedTripDay } from "./tripProgress.js";
 
 const STORAGE_KEY = "osaka-trip-planner-v1";
 const SHOPPING_STORAGE_KEY = "osaka-trip-shopping-v1";
@@ -9,6 +10,7 @@ const ACCOUNTING_STORAGE_KEY = "osaka-trip-accounting-v1";
 
 const defaultTrip = {
   itinerary: [
+    // 09/27
     {
       id: "day-1",
       date: "9/27",
@@ -17,70 +19,96 @@ const defaultTrip = {
       items: [
         {
           id: "d1-1",
-          time: "06:00-07:00",
-          place: "高雄機場報到 請自行取好前置量",
-          note: "・護照 / 機票 / 登機證\n・Visit Japan Web QR Code\n・日本 SIM / eSIM",
-          transport: "國際線航廈",
+          time: "04:20-07:05",
+          place: "高雄機場",
+          note: "・最早 04:20 開門 各自訓員自行前往請自行取好前置量\n・護照 / 機票 / 登機證\n・Visit Japan Web QR Code\n・日本 SIM / eSIM",
         },
         {
           id: "d1-2",
-          time: "07:00-10:30",
+          time: "07:05-11:10",
           place: "高雄（KHH）→ 關西（KIX）",
-          note: "入境",
-          transport: "航班（飛行約 3.5 小時）",
+          note: "飛行時間約 3.5 小時",
         },
         {
           id: "d1-3",
-          time: "10:30-11:40",
+          time: "11:10-12:00",
           place: "關西機場",
-          note: "預估停留 1 小時（含檢疫、證照查驗、提領行李）",
-          transport: "航廈內",
+          note: "入境手續預估停留約 1 小時",
+        },
+        {
+          id: "d1-3-1",
+          time: "12:00-12:09",
+          place: "關西機場車站",
+          note: "步行前往至車站 12:09 有車",
         },
         {
           id: "d1-4",
-          time: "11:40-12:00",
+          time: "12:09-12:15",
           place: "KIX → 臨空城 Rinku-Town",
           note: "出站後步行約 6 分鐘至臨空城 Outlets",
           transport:
-            "班次南海電鐵 1139 關空快速 1131 1147 有車\n南海電鐵 空港急行 1、2號月臺 或 JR 關空快速 3、4號月臺搭乘 1 站至臨空城站，車程約 5 分",
+            "班次南海電鐵 1209 or 關空快速\n南海電鐵 空港急行 1、2號月臺 或 JR 關空快速 3、4號月臺搭乘 1 站至臨空城站，車程約 5 分",
           fare: "JPY 370 円",
-          transit: [
+          transitOptions: [
             {
-              from: "關西機場站",
-              to: "臨空城站",
-              line: "南海電鐵 空港急行",
-              platform: "1、2 號月台",
-              duration: "約 5 分鐘",
-              fare: "JPY 370 円",
-              note: "可搭 11:39 班次",
+              label: "南海電鐵",
+              legs: [
+                {
+                  from: "關西機場站",
+                  to: "臨空城站",
+                  line: "南海電鐵 空港急行",
+                  platform: "1、2 號月台",
+                  duration: "約 5 分鐘",
+                  fare: "JPY 370 円",
+                  note: "可搭 12:09 班次",
+                },
+              ],
             },
             {
-              from: "關西機場站",
-              to: "臨空城站",
-              line: "JR 關空快速",
-              platform: "3、4 號月台",
-              duration: "約 5 分鐘",
-              fare: "JPY 370 円",
-              note: "可搭 11:31 / 11:47 班次",
+              label: "JR 關空快速",
+              legs: [
+                {
+                  from: "關西機場站",
+                  to: "臨空城站",
+                  line: "JR 關空快速",
+                  platform: "3、4 號月台",
+                  duration: "約 5 分鐘",
+                  fare: "JPY 370 円",
+                  note: "可搭 11:31 / 11:47 班次",
+                },
+              ],
             },
           ],
           links: [
             {
               label: "乘車路線",
-              url: "https://japantravel.navitime.com/zh-tw/area/jp/route/result/?start=00001353&goal=00000143&start_name=%E9%97%9C%E8%A5%BF%E6%A9%9F%E5%A0%B4&goal_name=%E8%87%A8%E7%A9%BA%E5%9F%8E&cid=&from=route_result_search_box&date_time=2026-09-27T11%3A30&airplane=false&shinkansen=false&airport_bus=false&city_bus=false&highway_bus=false&ferry=false&taxi=false",
+              url: "https://japantravel.go.link/4dWgo",
             },
           ],
         },
         {
+          id: "d1-3-1-1",
+          time: "12:15-12:21",
+          place: "臨空城站 → 臨空城 Outlets",
+          note: "步行約 6 分鐘至臨空城 Outlets",
+        },
+        {
           id: "d1-5",
-          time: "12:00-15:50",
+          time: "12:21-15:50",
           place: "臨空城 Outlets",
           note: "行李寄放：\n・車站寄物櫃：約 400 - 800 日圓 / 櫃\n・車站人工寄放：約 300 日圓 / 件\n・服務中心：約 800 日圓 / 件\n其他：\n・掃描現場告示牌領取外國人優惠券 QR Code\n・午餐可以考慮 喜神拉麵\n・15:40 務必取行李並返回車站\n・各位訓員注意這裡不要買太多，主力消費請保留在 29 號",
           transport: "步行",
         },
         {
+          id: "d1-5-1",
+          time: "15:50-16:03",
+          place: "臨空城站",
+          note: "走去車站加等車",
+          transport: "步行",
+        },
+        {
           id: "d1-6",
-          time: "15:50-17:00",
+          time: "16:03-16:57",
           place: "臨空城 → 飯店",
           note: "・電車時間約 40 分鐘\n・轉乘與步行約 10-15 分鐘\n・總計約 55-70 分鐘",
           transport:
@@ -108,23 +136,21 @@ const defaultTrip = {
           links: [
             {
               label: "乘車路線",
-              url: "https://japantravel.navitime.com/zh-tw/area/jp/route/result/?start=00000143&goal=00007296&start_name=%E8%87%A8%E7%A9%BA%E5%9F%8E&goal_name=%E6%97%A5%E6%9C%AC%E6%A9%8B(%E5%A4%A7%E9%98%AA%E5%BA%9C)&cid=&from=route_result_search_box&date_time=2026-09-27T16%3A00&airplane=false&shinkansen=false&airport_bus=false&city_bus=false&highway_bus=false&ferry=false&taxi=false",
+              url: "https://japantravel.go.link/5GYDl",
             },
           ],
         },
         {
           id: "d1-7",
-          time: "17:00-17:40",
+          time: "16:57-17:40",
           place: "飯店 Check-in",
           note: "彈性時間可稍坐休息或有特別想逛的可以先去晃晃",
-          transport: "休息",
         },
         {
           id: "d1-8",
           time: "17:40-20:00",
           place: "附近商圈",
-          note: "",
-          transport: "飯店出發 → 黑門市場 → 千日前 → 難波 → 戎橋筋 → 道頓堀 → 戎橋（Glico 跑跑人）→ 心齋橋筋",
+          note: "飯店出發 → 黑門市場 → 千日前 → 難波 → 戎橋筋 → 道頓堀 → 戎橋（Glico 跑跑人）→ 心齋橋筋",
           links: [{ label: "商圈步行路線", url: "https://maps.app.goo.gl/wm2Cc1evLkJWgoGu7" }],
         },
         {
@@ -132,18 +158,17 @@ const defaultTrip = {
           time: "20:00-21:30",
           place: "晚餐：和和鍋 道頓堀",
           note: "主打黑毛和牛、神戶牛涮涮鍋（Shabu-Shabu）與壽喜燒（Sukiyaki）吃到飽，亦有單人定量套餐",
-          transport: "步行前往",
           links: [{ label: "和和鍋 道頓堀", url: "https://maps.app.goo.gl/tU71oSgQRfNeu1eg9" }],
         },
         {
           id: "d1-10",
-          time: "21:30-",
-          place: "宵夜採買 & 自由活動",
+          time: "21:30-23:00",
+          place: "自由活動",
           note: "・Don Don Donki 或周邊連鎖藥妝超市\n・結束後步行返回飯店休息",
-          transport: "步行前往",
         },
       ],
     },
+    // 09/28
     {
       id: "day-2",
       date: "9/28",
@@ -154,52 +179,77 @@ const defaultTrip = {
           id: "d2-1",
           time: "08:00",
           place: "部隊起床",
-          note: "梳洗、著裝、早餐、準備出發",
-          transport: "—",
+          note: "武器裝具檢查",
+        },
+        {
+          id: "d2-1-1",
+          time: "08:50-09:00",
+          place: "飯店 → 日本橋車站",
+          note: "步行約 9 分鐘",
         },
         {
           id: "d2-2",
-          time: "09:00-09:25",
-          place: "飯店 → 大阪歷史博物館",
+          time: "09:00-09:30",
+          place: "日本橋車站 → 大阪歷史博物館",
           note: "車程＋轉乘步行約 20-25 分鐘",
           transport:
-            "班次 0902\n1.日本橋站 搭 Osaka Metro 堺筋線 至 堺筋本町站 車程約 9 分鐘\n2. 轉乘 中央線 至 谷町四丁目站 9 號出口 車程約 1 分鐘",
+            "班次 09:13\n1.日本橋站 搭 Osaka Metro 堺筋線 至 堺筋本町站 車程約 9 分鐘\n2. 轉乘 中央線 至 谷町四丁目站 9 號出口 車程約 1 分鐘",
+          links: [
+            {
+              label: "乘車路線A",
+              url: "https://japantravel.go.link/62tqf",
+            },
+            {
+              label: "乘車路線B",
+              url: "https://japantravel.go.link/b3wVz",
+            },
+          ],
           fare: "費用 JPY 190 円 ",
-          transit: [
+          transitOptions: [
             {
-              from: "日本橋站",
-              to: "堺筋本町站",
-              line: "Osaka Metro 堺筋線",
-              platform: "2 號月台",
-              duration: "約 9 分鐘",
-              note: "09:02 09:06 班次 開往	高槻市(阪急線) 8節編組 8 號車廂",
+              label: "經堺筋本町",
+              legs: [
+                {
+                  from: "日本橋站",
+                  to: "堺筋本町站",
+                  line: "Osaka Metro 堺筋線",
+                  platform: "2 號月台",
+                  duration: "約 9 分鐘",
+                  note: "開往	高槻市(阪急線) 8節編組 8 號車廂",
+                },
+                {
+                  from: "堺筋本町站",
+                  to: "谷町四丁目站",
+                  line: "Osaka Metro 中央線",
+                  platform: "1 號月台",
+                  duration: "約 1 分鐘",
+                  fare: "JPY 190 円",
+                  exit: "9 號出口",
+                  note: "開往	生駒 6節編組",
+                },
+              ],
             },
             {
-              from: "堺筋本町站",
-              to: "谷町四丁目站",
-              line: "Osaka Metro 中央線",
-              platform: "1 號月台",
-              duration: "約 1 分鐘",
-              fare: "JPY 190 円",
-              exit: "9 號出口",
-              note: "開往	生駒 6節編組",
-            },
-            {
-              from: "日本橋站",
-              to: "谷町九丁目",
-              line: "OsakaMetro千日前線",
-              platform: "1 號月台",
-              duration: "約 1 分鐘",
-              note: "09:05 班次開往	南巽 4 節編組 4 號車廂",
-            },
-            {
-              from: "谷町九丁目",
-              to: "谷町四丁目站",
-              line: "Osaka Metro 中央線",
-              platform: "2 號月台",
-              duration: "約 3 分鐘",
-              fare: "JPY 190 円",
-              note: "開往	大日 6 節編組 9 號出口出站",
+              label: "經谷町九丁目",
+              legs: [
+                {
+                  from: "日本橋站",
+                  to: "谷町九丁目",
+                  line: "OsakaMetro千日前線",
+                  platform: "1 號月台",
+                  duration: "約 1 分鐘",
+                  note: "開往	南巽 4 節編組 4 號車廂",
+                },
+                {
+                  from: "谷町九丁目",
+                  to: "谷町四丁目站",
+                  line: "Osaka Metro 中央線",
+                  platform: "2 號月台",
+                  duration: "約 3 分鐘",
+                  fare: "JPY 190 円",
+                  note: "開往	大日 6 節編組 9 號出口出站",
+                },
+              ],
             },
           ],
         },
@@ -208,56 +258,50 @@ const defaultTrip = {
           time: "09:30-10:40",
           place: "大阪歷史博物館",
           note: "・09:30 開門\n・使用周遊卡免費參觀常設展",
-          transport: "谷町四丁目站出站即達",
         },
         {
           id: "d2-4",
           time: "10:40-11:00",
           place: "步行前往大阪城",
-          note: "沿途拍照，步行進入城區",
-          transport: "歷史博物館 → 大手門 → 櫻門 → 天守閣",
+          note: "沿途拍照，步行進入城區\n歷史博物館 → 大手門 → 櫻門 → 天守閣",
         },
         {
           id: "d2-5",
           time: "11:00-12:30",
           place: "大阪城天守閣",
           note: "・使用周遊卡免費入場\n・參觀天守閣內部歷史文物（約 60-90 分鐘）\n・頂樓展望台俯瞰市景＋周邊拍照",
-          transport: "城區內部步行",
         },
         {
           id: "d2-6",
           time: "12:30-13:40",
           place: "城內用餐",
           note: "MIRAIZA 古蹟建築周邊或公園內餐廳用餐",
-          transport: "MIRAIZA OSAKA-JO 周邊",
         },
         {
           id: "d2-7",
           time: "13:40-14:30",
           place: "大阪城公園散步",
           note: "・散步拍照點：護城河、極樂橋、御座船乘船處、梅林公園",
-          transport: "園區內散步",
         },
         {
           id: "d2-8",
           time: "14:30-15:00",
           place: "前往大阪城港換票",
           note: "・提早 20-30 分鐘抵達售票處\n・憑周遊卡兌換指定班次乘船票",
-          transport: "步行至大阪城港售票處",
         },
         {
           id: "d2-9",
           time: "15:00-16:00",
           place: "Aqua-Liner 水上巴士",
           note: "・巡航時間約 55 分鐘\n・雨天/停航備案：附近晃晃或提前往新世界",
-          transport: "大阪城港出發（大阪城港發著，周遊）",
         },
         {
           id: "d2-10",
           time: "16:00-17:00",
           place: "大阪城 → 新世界",
           note: "出站即達新世界商圈與通天閣本通",
-          transport: "步行至周邊地鐵站搭乘「Osaka Metro 堺筋線」直達「惠美須町站」3 號出口",
+          transport: "16:16有車 步行至周邊地鐵站搭乘「Osaka Metro 堺筋線」直達「惠美須町站」3 號出口",
+          links: [{ label: "乘車路線", url: "https://japantravel.go.link/glub2" }],
           transit: [
             {
               from: "大阪商務園區",
@@ -281,17 +325,15 @@ const defaultTrip = {
         },
         {
           id: "d2-11",
-          time: "17:00-18:30",
+          time: "17:00-19:00",
           place: "新世界散步＋晚餐",
-          note: "・抵達後首要任務：先去通天閣櫃台確認/預約入場時段（周遊卡採時段管制，切勿吃飽才去碰運氣）\n・美食清單：串炸、土手燒（牛筋煮）、大阪燒、章魚燒\n・拍照熱點：通天閣正面視角、新世界巨大招牌街道",
-          transport: "徒步步行",
+          note: "・抵達後首要任務：先去通天閣櫃台確認/預約入場時段）\n・美食清單：串炸、土手燒（牛筋煮）、大阪燒、章魚燒\n・拍照熱點：通天閣正面視角、新世界巨大招牌街道",
         },
         {
           id: "d2-12",
           time: "19:00-20:00",
           place: "通天閣展望台（彈性）",
           note: "・憑預約時段登頂（一般展望台開放至 21:45，最後入場 21:15）\n・若不想看夜景，可直接改為商圈續逛或提早撤退",
-          transport: "步行前往",
         },
         {
           id: "d2-13",
@@ -299,6 +341,7 @@ const defaultTrip = {
           place: "返回飯店",
           note: "從 8 號出口出站，步行返回飯店休息",
           transport: "「惠美須町站」搭乘「Osaka Metro 堺筋線」至「日本橋站」",
+          links: [{ label: "乘車路線", url: "https://japantravel.go.link/bG4C9" }],
           transit: [
             {
               from: "惠美須町站",
@@ -314,6 +357,7 @@ const defaultTrip = {
         },
       ],
     },
+    // 09/29
     {
       id: "day-3",
       date: "9/29",
@@ -322,124 +366,107 @@ const defaultTrip = {
       items: [
         {
           id: "d3-1",
-          time: "08:30",
+          time: "08:00-08:50",
           place: "部隊起床",
-          note: "盥洗、準備出發",
-          transport: "—",
+          note: "武器裝具檢查",
+        },
+        {
+          id: "d3-1-1",
+          time: "08:50-09:05",
+          place: "飯店 →難波(大阪Metro地鐵)",
+          note: "步行約 15 分鐘",
         },
         {
           id: "d3-2",
-          time: "09:10-09:40",
-          place: "飯店出發 → 梅田",
-          note: "總車程＋轉乘步行約 25-30 分鐘",
-          transport: "1.「日本橋站」搭「Osaka Metro 千日前線」至「難波站」\n2. 站內轉乘「御堂筋線」至「梅田站」",
+          time: "09:05-09:26",
+          place: "難波(大阪Metro地鐵) → 梅田（大阪地鐵）",
           transit: [
             {
-              from: "日本橋站",
-              to: "難波站",
-              line: "Osaka Metro 千日前線",
-              duration: "約 1 分鐘",
+              from: "難波(大阪Metro地鐵)",
+              to: "梅田（大阪地鐵）",
+              line: "Osaka Metro地鐵御堂筋線",
+              duration: "約 8 分鐘",
               platform: "2 號月台",
-              note: "開往	野田阪神 4節編組 3、4號車廂",
-            },
-            {
-              from: "難波站",
-              to: "梅田站",
-              line: "Osaka Metro 御堂筋線",
-              duration: "約 9 分鐘",
-              platform: "2 號月台",
-              fare: "JPY 240 円",
-              exit: "5 號出口",
-              note: "開往	新大阪 10節編組",
+              note: "開往 新大阪 10節編組",
             },
           ],
         },
         {
           id: "d3-3",
-          time: "10:00-10:50",
+          time: "09:26-10:50",
           place: "大丸梅田店（CYPRIS）",
           note: "・營業時間：10:00-20:00\n・CYPRIS 皮件專櫃",
           transport: "梅田站地下連通道直通大丸梅田店",
-          links: [{ label: "大丸梅田店", url: "https://maps.app.goo.gl/cYgPzDTHhjxpEdpQ7" }],
+          links: [{ label: "大丸梅田店", url: "https://maps.app.goo.gl/gx4MATs7hAGR3AXB6" }],
         },
         {
           id: "d3-4",
           time: "10:50-11:00",
           place: "步行至 Grand Front Osaka",
           note: "步行約 5-10 分鐘抵達 Grand Front Osaka 南館",
-          transport: "經 JR 大阪站北側天橋或地下通道前往",
         },
         {
           id: "d3-5",
           time: "11:00-12:00",
-          place: "自由活動",
-          note: "",
-          transport: "Grand Front Osaka 南館 B1F",
+          place: "Grand Front Osaka",
+          note: "自由活動",
         },
         {
           id: "d3-6",
           time: "12:00-13:30",
           place: "午餐：梅田周邊商場",
           note: "・LINKS UMEDA 美食街、阪急三番街、Grand Front 餐廳街",
-          transport: "步行前往鄰近商場",
         },
         {
           id: "d3-7",
-          time: "13:30-17:00",
+          time: "13:30-16:50",
           place: "梅田商圈自由活動",
           note: "・自由購物（LUCUA、阪急、阪神、友都八喜 Yodobashi 等）",
-          transport: "梅田站周邊各大百貨與地下街",
         },
         {
-          id: "d3-8",
-          time: "17:00-18:00",
-          place: "HEP FIVE 摩天輪（彈性）",
-          note: "・若天氣不錯，可直接將此段保留給空中庭園提早卡位",
-          transport: "步行前往 HEP FIVE（7F 搭乘處）",
+          id: "d3-7-1",
+          time: "16:50-16:55",
+          place: "Grand Front Osaka → 藍天大廈",
+          note: "步行約 5 分鐘",
         },
         {
           id: "d3-9",
-          time: "18:00-19:00",
+          time: "16:55-18:30",
           place: "梅田藍天大廈／空中庭園展望台",
           note: "・日落卡位：務必確認當天日落時刻，建議日落前 30-45 分鐘抵達頂樓有夕陽轉夜景\n・票務備忘：非 2 日連續周遊卡者現場或線上直接購買入場即可",
-          transport: "步行經地下通前往梅田藍天大廈（約 10-15 分鐘）",
+        },
+        {
+          id: "d3-9-1",
+          time: "18:30-19:00",
+          place: "藍天大廈 → YAKINIKUEN 忍鬨大阪梅田店",
+          note: "步行約 20 分鐘",
         },
         {
           id: "d3-10",
           time: "19:00-21:00",
           place: "YAKINIKUEN 忍鬨大阪梅田店",
           note: "大阪近年在社群與觀光客圈極具代表性的單點制黑毛和牛燒肉店，以「厚切蔥包牛舌」為核心招牌",
-          transport: "步行前往燒肉店（預留 10-15 分鐘路程與找店）",
-          links: [{ label: "YAKINIKUEN 忍鬨 大阪梅田店", url: "https://maps.app.goo.gl/L26RuLubYY2jyFD97" }],
+          links: [{ label: "YAKINIKUEN 忍鬨 大阪梅田店", url: "https://maps.app.goo.gl/i4RsFU54qW2CGZct5" }],
         },
         {
           id: "d3-11",
           time: "21:00-21:40",
-          place: "返回飯店",
-          note: "回飯店休息、整理戰利品",
-          transport: "1.「梅田站」搭乘「Osaka Metro 御堂筋線」至「難波站」\n2. 轉乘「千日前線」至「日本橋站」出站",
+          place: "梅田（大阪地鐵）→ 難波(大阪Metro地鐵)",
+          note: "這天都是逛街 吃飽飯就早點回去吧 還有力氣的就自行安排",
           transit: [
             {
-              from: "梅田站",
-              to: "難波站",
-              line: "Osaka Metro 御堂筋線",
+              from: "梅田（大阪地鐵）",
+              to: "難波(大阪Metro地鐵)",
+              line: "Osaka Metro地鐵御堂筋線",
               platform: "1 號月台",
-              duration: "約 8 分鐘",
-              note: "開往	中百舌鳥 10節編組 9 號車廂",
-            },
-            {
-              from: "難波站",
-              to: "日本橋站",
-              line: "Osaka Metro 千日前線",
-              platform: "1 號月台",
-              duration: "約 1 分鐘",
-              fare: "JPY 240 円",
-              note: "開往	南巽 4節編組",
+              duration: "約 8-9 分鐘",
+              note: "開往 中百舌鳥 10節編組",
             },
           ],
         },
       ],
     },
+    // 09/30
     {
       id: "day-4",
       date: "9/30",
@@ -448,30 +475,33 @@ const defaultTrip = {
       items: [
         {
           id: "d4-1",
-          time: "06:45-07:40",
-          place: "部隊起床 & 出門準備",
-          note: "・06:45 起床盥洗\n・07:05 早餐\n・07:30 行李/隨身包包整理完畢\n・07:40 前離開飯店",
-          transport: "—",
+          time: "07:00-08:00",
+          place: "部隊起床",
+          note: "武器裝具檢查",
+        },
+        {
+          id: "d4-1-1",
+          time: "08:00-08:08",
+          place: "近鐵日本橋 2 出口",
+          note: "步行約八分鐘",
         },
         {
           id: "d4-2",
-          time: "07:40-08:10",
-          place: "前往一日遊集合點",
-          note: "步行至「日本橋 / 近鐵日本橋站」2 號出口周邊",
-          transport: "步行前往",
+          time: "08:08-08:25",
+          place: "近鐵日本橋站 2 號出口",
+          note: "近鐵日本橋站 2 號出口集合點",
         },
         {
           id: "d4-3",
-          time: "08:10-08:30",
+          time: "08:25-08:30",
           place: "抵達集合點 & 報到",
-          note: "・08:10 提前抵達預留找路\n・08:25 正式集合報到",
-          transport: "集合地點現場等候",
+          note: "0825 集合",
         },
         {
           id: "d4-4",
           time: "08:30-10:30",
           place: "大阪 → 京都",
-          note: "車程約 2 小時，車上補眠或確認京都景點路線",
+          note: "車程約 2 小時",
           transport: "專車接駁巴士",
         },
         {
@@ -479,7 +509,6 @@ const defaultTrip = {
           time: "10:30-12:00",
           place: "金閣寺（鹿苑寺）",
           note: "・停留約 1.5 小時",
-          transport: "園區內步行",
         },
         {
           id: "d4-6",
@@ -521,7 +550,6 @@ const defaultTrip = {
           time: "18:30-21:00",
           place: "難波商圈晚餐 & 自由活動",
           note: "・晚餐推薦：燒肉、居酒屋、大阪燒、串炸\n・飯後於難波街區散步採買，隨後步行返回日本橋飯店休息",
-          transport: "難波 / 裏難波商圈步行",
         },
       ],
     },
@@ -533,23 +561,21 @@ const defaultTrip = {
       items: [
         {
           id: "d5-1",
-          time: "06:15-07:15",
-          place: "部隊起床 & 出發準備",
-          note: "・06:15 起床盥洗\n・06:35 早餐\n・07:00 行李/隨身裝備整理完成\n・07:15 準時踏出飯店",
-          transport: "—",
+          time: "06:20-07:20",
+          place: "部隊起床",
+          note: "武器裝具檢查",
         },
         {
           id: "d5-2",
-          time: "07:15-07:50",
-          place: "前往集合點 & 巴士報到",
-          note: "・集合地點：「近鐵日本橋站」2 號出口附近\n・07:30 抵達集合現場\n・07:45 正式點名報到\n・07:50 專車準時發車",
-          transport: "步行前往",
+          time: "07:20-07:50",
+          place: "近鐵日本橋站 2 號出口集合",
+          note: "07:30 抵達集合現場\n・07:45 正式點名報到\n・07:50 專車準時發車",
         },
         {
           id: "d5-3",
           time: "07:50-11:20",
           place: "大阪 → 京都府北部",
-          note: "・車程約 3.5 小時\n・中途停靠休息站上洗手間與補給，車上補眠",
+          note: "・車程約 3.5 小時",
           transport: "專車接駁巴士",
         },
         {
@@ -574,6 +600,13 @@ const defaultTrip = {
           transport: "纜車 / 單人登山吊椅（前往飛龍觀）",
         },
         {
+          id: "d5-6-1",
+          time: "16:00-16:10",
+          place: "搭車前往巴士停靠點",
+          note: "",
+          transport: "專車接駁巴士",
+        },
+        {
           id: "d5-7",
           time: "16:10-18:30",
           place: "天橋立 → 大阪市區",
@@ -585,14 +618,12 @@ const defaultTrip = {
           time: "18:30-21:00",
           place: "最後一夜採買 & 晚餐",
           note: "・晚餐推薦：難波拉麵街（一蘭、金龍、無鐵砲等）或周邊餐廳\n・最後衝刺：補齊所有藥妝、美妝、食品與伴手禮",
-          transport: "難波 / 道頓堀商圈步行",
         },
         {
           id: "d5-9",
-          time: "21:00-",
+          time: "21:00-23:00",
           place: "回飯店行李打包 & 檢查",
           note: "最後整理",
-          transport: "飯店內",
         },
       ],
     },
@@ -604,24 +635,15 @@ const defaultTrip = {
       items: [
         {
           id: "d6-1",
-          time: "06:45-07:00",
-          place: "起床盥洗",
-          note: "梳洗、確認隨身貴重物品（護照、錢包、手機）在身",
-          transport: "—",
-        },
-        {
-          id: "d6-2",
-          time: "07:00-07:30",
-          place: "早餐 & 最終打包確認",
-          note: "・快速享用早餐\n・行李最後封箱（再次確認行動電源在隨身包、100ml 以上液體在托運行李）",
-          transport: "飯店內",
+          time: "07:00-07:50",
+          place: "部隊起床",
+          note: "武器裝具檢查",
         },
         {
           id: "d6-3",
-          time: "07:30-08:00",
+          time: "07:50-08:00",
           place: "飯店 Check-out & 出發",
-          note: "・辦理退房手續\n・拖行李步行約 15 分鐘至「南海 難波站」",
-          transport: "步行前往南海難波站",
+          note: "・辦理退房手續\n・步行約 15 分鐘至「南海 難波站」",
         },
         {
           id: "d6-4",
@@ -629,24 +651,34 @@ const defaultTrip = {
           place: "南海難波 → 關西機場（KIX）",
           note: "・班次選擇：\n1. 特急 Rapit：全車指定席，車程約 38 分鐘（需加購特急券）\n2. 空港急行：一般通勤電車，車程約 44 分鐘（刷 ICOCA 即可）\n・預計 09:00 前後抵達關西機場站",
           transport: "搭乘「南海電鐵」直達「關西機場站」",
-          transit: [
+          transitOptions: [
             {
-              from: "難波(南海線)",
-              to: "關西機場站",
-              line: "南海本線機場急行",
-              platform: "5 號月台",
-              duration: "約 47 分鐘",
-              fare: "JPY 970 円",
-              note: "班次 0802 0817 開往關西機場",
+              label: "08:02 / 08:17 班次",
+              legs: [
+                {
+                  from: "難波(南海線)",
+                  to: "關西機場站",
+                  line: "南海本線機場急行",
+                  platform: "5 號月台",
+                  duration: "約 47 分鐘",
+                  fare: "JPY 970 円",
+                  note: "班次 0802 0817 開往關西機場",
+                },
+              ],
             },
             {
-              from: "難波(南海線)",
-              to: "關西機場站",
-              line: "南海電鐵 空港急行",
-              platform: "9 號月台",
-              duration: "約 39 分鐘",
-              fare: "座位 JPY 700 円 乘車 JPY 970 円 共 JPY 1,670 円",
-              note: "班次 0800 開往關西機場",
+              label: "08:00 班次（含座位費）",
+              legs: [
+                {
+                  from: "難波(南海線)",
+                  to: "關西機場站",
+                  line: "南海電鐵 空港急行",
+                  platform: "9 號月台",
+                  duration: "約 39 分鐘",
+                  fare: "座位 JPY 700 円 乘車 JPY 970 円 共 JPY 1,670 円",
+                  note: "班次 0800 開往關西機場",
+                },
+              ],
             },
           ],
         },
@@ -679,7 +711,6 @@ const travelInfo = {
     inquiryTime: "9:00-22:00",
     email: "namba-kuromon@eslead-hotel.com",
     address: "〒542-0072 3-8-29 Kozu Chuo-ku, Osaka-shi, Osaka",
-    doorCode: "6891＊",
     note: "入住前一天通常會以電子郵件寄送入館方法說明。為了縮短入住手續，請優先確認信箱並完成必要資料登錄。",
     link: "https://maps.app.goo.gl/6g3aKPsfxgDnEWAy9",
   },
@@ -755,8 +786,6 @@ const pretripChecklist = {
 
 const pretripItems = [...pretripChecklist.must, ...pretripChecklist.suggested];
 
-const TRIP_YEAR = 2026;
-
 function getInitialShopping() {
   try {
     const saved = localStorage.getItem(SHOPPING_STORAGE_KEY);
@@ -829,175 +858,95 @@ function getSafeLinkHref(link) {
   }
 }
 
-const formatHeaderTime = (date) =>
-  date.toLocaleTimeString("zh-TW", {
-    hour12: true,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function TransitLegs({ legs }) {
+  return (
+    <div className="transit-leg-list">
+      {legs.map((leg, legIndex) => (
+        <article className="transit-leg" key={legIndex}>
+          <span className="transit-step">
+            {legs.length > 1 ? `第 ${legIndex + 1} 段 · ${legIndex > 0 ? "轉乘" : "上車"}` : "直達 · 不需轉乘"}
+          </span>
+          <div className="transit-route">
+            <strong>{leg.from}</strong>
+            <span aria-hidden="true">→</span>
+            <strong>{leg.to}</strong>
+          </div>
 
-function getTripDate(day) {
-  const [month, date] = day.date.split("/").map(Number);
-  return new Date(TRIP_YEAR, month - 1, date);
-}
+          <dl className="transit-grid">
+            {leg.line && (
+              <div className="wide-detail">
+                <dt>搭乘</dt>
+                <dd>{leg.line}</dd>
+              </div>
+            )}
+            {leg.platform && (
+              <div>
+                <dt>月台</dt>
+                <dd>{leg.platform}</dd>
+              </div>
+            )}
+            {leg.direction && (
+              <div>
+                <dt>方向</dt>
+                <dd>{leg.direction}</dd>
+              </div>
+            )}
+            {leg.boarding && (
+              <div>
+                <dt>上車</dt>
+                <dd>{leg.boarding}</dd>
+              </div>
+            )}
+            {leg.duration && (
+              <div>
+                <dt>車程</dt>
+                <dd>{leg.duration}</dd>
+              </div>
+            )}
+            {leg.exit && (
+              <div>
+                <dt>出口</dt>
+                <dd>{leg.exit}</dd>
+              </div>
+            )}
+            {leg.fare && (
+              <div>
+                <dt>費用</dt>
+                <dd>{leg.fare}</dd>
+              </div>
+            )}
+          </dl>
 
-function compareLocalDate(left, right) {
-  const leftDate = new Date(left.getFullYear(), left.getMonth(), left.getDate()).getTime();
-  const rightDate = new Date(right.getFullYear(), right.getMonth(), right.getDate()).getTime();
-  return Math.sign(leftDate - rightDate);
-}
-
-function parseClockToMinutes(value) {
-  const match = value?.match(/(\d{1,2}):(\d{2})/);
-  if (!match) return null;
-
-  return Number(match[1]) * 60 + Number(match[2]);
-}
-
-function getItemStartMinutes(item) {
-  return parseClockToMinutes(item.time);
-}
-
-function getItemEndMinutes(item, itemIndex, items) {
-  const endMatch = item.time.match(/[-–—]\s*(\d{1,2}):(\d{2})/);
-  if (endMatch) return Number(endMatch[1]) * 60 + Number(endMatch[2]);
-
-  const nextStart = getItemStartMinutes(items[itemIndex + 1]);
-  if (nextStart !== null) return nextStart;
-
-  return 24 * 60;
-}
-
-function getProgressStatus(day, item, itemIndex, items, now) {
-  const tripDate = getTripDate(day);
-  const dateCompare = compareLocalDate(now, tripDate);
-  if (dateCompare < 0) return "upcoming";
-  if (dateCompare > 0) return "done";
-
-  const startMinutes = getItemStartMinutes(item);
-  if (startMinutes === null) return "upcoming";
-
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const endMinutes = getItemEndMinutes(item, itemIndex, items);
-  if (currentMinutes < startMinutes) return "upcoming";
-  if (currentMinutes >= endMinutes) return "done";
-  return "current";
-}
-
-function getDayProgress(day, now) {
-  const tripDate = getTripDate(day);
-  const dateCompare = compareLocalDate(now, tripDate);
-  const statuses = day.items.map((item, index) => getProgressStatus(day, item, index, day.items, now));
-  const currentIndex = statuses.indexOf("current");
-
-  if (dateCompare < 0) {
-    return {
-      className: "upcoming",
-      label: `${day.date} 尚未開始`,
-      text: "當天會依時間自動標示目前行程",
-      statuses,
-    };
-  }
-
-  if (dateCompare > 0) {
-    return {
-      className: "done",
-      label: `${day.date} 已完成`,
-      text: `共 ${day.items.length} 段行程`,
-      statuses,
-    };
-  }
-
-  if (currentIndex >= 0) {
-    return {
-      className: "current",
-      label: `現在 ${formatHeaderTime(now)}`,
-      text: `目前：${day.items[currentIndex].place}`,
-      statuses,
-    };
-  }
-
-  const doneCount = statuses.filter((status) => status === "done").length;
-  if (doneCount === day.items.length) {
-    return {
-      className: "done",
-      label: "今日行程已結束",
-      text: "可以回飯店整理戰利品了",
-      statuses,
-    };
-  }
-
-  return {
-    className: "upcoming",
-    label: "今日行程尚未開始",
-    text: "時間到後會自動標示目前行程",
-    statuses,
-  };
+          {leg.note && <p className="transit-note">{leg.note}</p>}
+        </article>
+      ))}
+    </div>
+  );
 }
 
 function TransitDetails({ item }) {
+  if (item.transitOptions?.length > 0) {
+    return (
+      <div className="transit-card" aria-label="交通資訊">
+        <span className="block-label">交通 / 路線 · 擇一搭乘</span>
+        <p className="transit-hint">以下為替代方案，選擇其中一個即可。</p>
+        {item.transitOptions.map((option, index) => (
+          <section className="transit-option" key={option.label}>
+            <h5>
+              方案 {String.fromCharCode(65 + index)} · {option.label}
+            </h5>
+            <TransitLegs legs={option.legs} />
+          </section>
+        ))}
+      </div>
+    );
+  }
+
   if (item.transit?.length > 0) {
     return (
       <div className="transit-card" aria-label="交通資訊">
-        <span className="block-label">交通 / 路線</span>
-        <div className="transit-leg-list">
-          {item.transit.map((leg, legIndex) => (
-            <article className="transit-leg" key={`${item.id}-transit-${legIndex}`}>
-              <div className="transit-route">
-                <strong>{leg.from}</strong>
-                <span aria-hidden="true">→</span>
-                <strong>{leg.to}</strong>
-              </div>
-
-              <dl className="transit-grid">
-                {leg.line && (
-                  <div className="wide-detail">
-                    <dt>搭乘</dt>
-                    <dd>{leg.line}</dd>
-                  </div>
-                )}
-                {leg.platform && (
-                  <div>
-                    <dt>月台</dt>
-                    <dd>{leg.platform}</dd>
-                  </div>
-                )}
-                {leg.direction && (
-                  <div>
-                    <dt>方向</dt>
-                    <dd>{leg.direction}</dd>
-                  </div>
-                )}
-                {leg.boarding && (
-                  <div>
-                    <dt>上車</dt>
-                    <dd>{leg.boarding}</dd>
-                  </div>
-                )}
-                {leg.duration && (
-                  <div>
-                    <dt>車程</dt>
-                    <dd>{leg.duration}</dd>
-                  </div>
-                )}
-                {leg.exit && (
-                  <div>
-                    <dt>出口</dt>
-                    <dd>{leg.exit}</dd>
-                  </div>
-                )}
-                {leg.fare && (
-                  <div>
-                    <dt>費用</dt>
-                    <dd>{leg.fare}</dd>
-                  </div>
-                )}
-              </dl>
-
-              {leg.note && <p className="transit-note">{leg.note}</p>}
-            </article>
-          ))}
-        </div>
+        <span className="block-label">交通 / 路線 · {item.transit.length > 1 ? "依序搭乘" : "直達"}</span>
+        <TransitLegs legs={item.transit} />
       </div>
     );
   }
@@ -1024,7 +973,7 @@ function App() {
   const [notes, setNotes] = useState(getInitialNotes);
   const [accounting, setAccounting] = useState(getInitialAccounting);
   const [page, setPage] = useState("itinerary");
-  const [activeDay, setActiveDay] = useState(defaultTrip.itinerary[0].id);
+  const [activeDay, setActiveDay] = useState(null);
   const [newShoppingItem, setNewShoppingItem] = useState("");
   const [newNote, setNewNote] = useState({ title: "", link: "", content: "" });
   const [newExpense, setNewExpense] = useState({ title: "", amount: "", method: "cash" });
@@ -1193,17 +1142,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNow(new Date());
-    }, 30000);
+    const refreshTime = () => setNow(new Date());
+    const timer = window.setInterval(refreshTime, 30000);
+    window.addEventListener("focus", refreshTime);
+    document.addEventListener("visibilitychange", refreshTime);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshTime);
+      document.removeEventListener("visibilitychange", refreshTime);
+    };
   }, []);
 
-  const currentDay = useMemo(
-    () => defaultTrip.itinerary.find((day) => day.id === activeDay) ?? defaultTrip.itinerary[0],
-    [activeDay],
-  );
+  const currentDay = useMemo(() => getSelectedTripDay(defaultTrip.itinerary, activeDay, now), [activeDay, now]);
 
   const progressInfo = useMemo(() => getDayProgress(currentDay, now), [currentDay, now]);
 
@@ -1354,7 +1305,8 @@ function App() {
                 type="button"
                 key={day.id}
                 className={day.id === currentDay.id ? "active" : ""}
-                onClick={() => setActiveDay(day.id)}
+                onClick={() => setActiveDay({ id: day.id, selectedOn: getDateKey(new Date()) })}
+                aria-pressed={day.id === currentDay.id}
               >
                 <strong>{day.date}</strong>
                 <small>{day.label}</small>
@@ -1374,7 +1326,20 @@ function App() {
 
           <div className={`progress-preview ${progressInfo.className}`}>
             <span>{progressInfo.label}</span>
-            <strong>{progressInfo.text}</strong>
+            <div className="progress-stop">
+              <span>目前</span>
+              <div>
+                <strong>{progressInfo.text}</strong>
+                {progressInfo.currentItem && <time>{progressInfo.currentItem.time}</time>}
+              </div>
+            </div>
+            <div className="progress-stop next-stop">
+              <span>下一站</span>
+              <div>
+                <strong>{progressInfo.nextItem?.place ?? "本日已無後續行程"}</strong>
+                {progressInfo.nextItem && <time>{progressInfo.nextItem.time}</time>}
+              </div>
+            </div>
           </div>
 
           <ol className="timeline">
@@ -1395,9 +1360,9 @@ function App() {
                           <h4>{item.place}</h4>
                           {progressStatus === "current" && <span className="now-badge">現在</span>}
                         </div>
-                        <span className="more-dots" aria-hidden="true">
+                        {/* <span className="more-dots" aria-hidden="true">
                           •••
-                        </span>
+                        </span> */}
                       </div>
                       {item.note && (
                         <div className="note-block">
@@ -1448,7 +1413,7 @@ function App() {
                 </div>
                 <div>
                   <dt>開鎖號碼</dt>
-                  <dd>{travelInfo.hotel.doorCode}</dd>
+                  {/* <dd>{travelInfo.hotel.doorCode}</dd> */}
                 </div>
                 <div>
                   <dt>電話</dt>
@@ -1733,7 +1698,7 @@ function App() {
           </div>
 
           <label className="accounting-total-field">
-            總日幣
+            總日幣現金
             <input
               value={accounting.totalJpy ?? ""}
               onChange={(event) => updateTotalJpy(event.target.value)}

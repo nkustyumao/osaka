@@ -257,6 +257,29 @@ button {
   line-height: 1.35;
 }
 
+.progress-stop {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.progress-stop > div {
+  display: grid;
+  gap: 3px;
+  overflow-wrap: anywhere;
+}
+
+.progress-stop time {
+  font-size: 0.82rem;
+}
+
+.next-stop {
+  margin-top: 5px;
+  border-top: 1px solid #d8e0ea;
+}
+
 .timeline {
   display: grid;
   gap: 4px;
@@ -506,6 +529,29 @@ button {
 .transit-leg-list {
   display: grid;
   gap: 10px;
+}
+
+.transit-option + .transit-option {
+  padding-top: 12px;
+  border-top: 1px dashed #b9cbdc;
+}
+
+.transit-option h5 {
+  margin: 0 0 8px;
+  color: #1f5f8f;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.transit-hint,
+.transit-step {
+  color: #526176;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.transit-step {
+  font-weight: 800;
 }
 
 .transit-leg {
