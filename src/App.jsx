@@ -168,11 +168,122 @@ const defaultTrip = {
         },
       ],
     },
+    
+    // 09/29
+    {
+      id: "day-3",
+      date: "9/28",
+      label: "Day 2",
+      title: "梅田、空中庭園、燒肉",
+      items: [
+        {
+          id: "d3-1",
+          time: "08:00-08:50",
+          place: "部隊起床",
+          note: "武器裝具檢查",
+        },
+        {
+          id: "d3-1-1",
+          time: "08:50-09:05",
+          place: "飯店 →難波(大阪Metro地鐵)",
+          note: "步行約 15 分鐘",
+        },
+        {
+          id: "d3-2",
+          time: "09:05-09:26",
+          place: "難波(大阪Metro地鐵) → 梅田（大阪地鐵）",
+          transit: [
+            {
+              from: "難波(大阪Metro地鐵)",
+              to: "梅田（大阪地鐵）",
+              line: "Osaka Metro地鐵御堂筋線",
+              duration: "約 8 分鐘",
+              platform: "2 號月台",
+              note: "開往 新大阪 10節編組",
+            },
+          ],
+        },
+        {
+          id: "d3-3",
+          time: "09:26-10:50",
+          place: "大丸梅田店（CYPRIS）",
+          note: "・營業時間：10:00-20:00\n・CYPRIS 皮件專櫃",
+          transport: "梅田站地下連通道直通大丸梅田店",
+          links: [{ label: "大丸梅田店", url: "https://maps.app.goo.gl/gx4MATs7hAGR3AXB6" }],
+        },
+        {
+          id: "d3-4",
+          time: "10:50-11:00",
+          place: "步行至 Grand Front Osaka",
+          note: "步行約 5-10 分鐘抵達 Grand Front Osaka 南館",
+        },
+        {
+          id: "d3-5",
+          time: "11:00-12:00",
+          place: "Grand Front Osaka",
+          note: "自由活動",
+        },
+        {
+          id: "d3-6",
+          time: "12:00-13:30",
+          place: "午餐：梅田周邊商場",
+          note: "・LINKS UMEDA 美食街、阪急三番街、Grand Front 餐廳街",
+        },
+        {
+          id: "d3-7",
+          time: "13:30-16:50",
+          place: "梅田商圈自由活動",
+          note: "・自由購物（LUCUA、阪急、阪神、友都八喜 Yodobashi 等）",
+        },
+        {
+          id: "d3-7-1",
+          time: "16:50-16:55",
+          place: "Grand Front Osaka → 藍天大廈",
+          note: "步行約 5 分鐘",
+        },
+        {
+          id: "d3-9",
+          time: "16:55-18:30",
+          place: "梅田藍天大廈／空中庭園展望台",
+          note: "・日落卡位：務必確認當天日落時刻，建議日落前 30-45 分鐘抵達頂樓有夕陽轉夜景\n・票務備忘：非 2 日連續周遊卡者現場或線上直接購買入場即可",
+        },
+        {
+          id: "d3-9-1",
+          time: "18:30-19:00",
+          place: "藍天大廈 → YAKINIKUEN 忍鬨大阪梅田店",
+          note: "步行約 20 分鐘",
+        },
+        {
+          id: "d3-10",
+          time: "19:00-21:00",
+          place: "YAKINIKUEN 忍鬨大阪梅田店",
+          note: "大阪近年在社群與觀光客圈極具代表性的單點制黑毛和牛燒肉店，以「厚切蔥包牛舌」為核心招牌",
+          links: [{ label: "YAKINIKUEN 忍鬨 大阪梅田店", url: "https://maps.app.goo.gl/i4RsFU54qW2CGZct5" }],
+        },
+        {
+          id: "d3-11",
+          time: "21:00-21:40",
+          place: "梅田（大阪地鐵）→ 難波(大阪Metro地鐵)",
+          note: "這天都是逛街 吃飽飯就早點回去吧 還有力氣的就自行安排",
+          transit: [
+            {
+              from: "梅田（大阪地鐵）",
+              to: "難波(大阪Metro地鐵)",
+              line: "Osaka Metro地鐵御堂筋線",
+              platform: "1 號月台",
+              duration: "約 8-9 分鐘",
+              note: "開往 中百舌鳥 10節編組",
+            },
+          ],
+        },
+      ],
+    },
+
     // 09/28
     {
       id: "day-2",
-      date: "9/28",
-      label: "Day 2",
+      date: "9/29",
+      label: "Day 3",
       title: "大阪城、新世界、通天閣",
       items: [
         {
@@ -352,115 +463,6 @@ const defaultTrip = {
               fare: "JPY 190 円",
               exit: "8 號出口",
               note: "開往北千里8節編組",
-            },
-          ],
-        },
-      ],
-    },
-    // 09/29
-    {
-      id: "day-3",
-      date: "9/29",
-      label: "Day 3",
-      title: "梅田、空中庭園、燒肉",
-      items: [
-        {
-          id: "d3-1",
-          time: "08:00-08:50",
-          place: "部隊起床",
-          note: "武器裝具檢查",
-        },
-        {
-          id: "d3-1-1",
-          time: "08:50-09:05",
-          place: "飯店 →難波(大阪Metro地鐵)",
-          note: "步行約 15 分鐘",
-        },
-        {
-          id: "d3-2",
-          time: "09:05-09:26",
-          place: "難波(大阪Metro地鐵) → 梅田（大阪地鐵）",
-          transit: [
-            {
-              from: "難波(大阪Metro地鐵)",
-              to: "梅田（大阪地鐵）",
-              line: "Osaka Metro地鐵御堂筋線",
-              duration: "約 8 分鐘",
-              platform: "2 號月台",
-              note: "開往 新大阪 10節編組",
-            },
-          ],
-        },
-        {
-          id: "d3-3",
-          time: "09:26-10:50",
-          place: "大丸梅田店（CYPRIS）",
-          note: "・營業時間：10:00-20:00\n・CYPRIS 皮件專櫃",
-          transport: "梅田站地下連通道直通大丸梅田店",
-          links: [{ label: "大丸梅田店", url: "https://maps.app.goo.gl/gx4MATs7hAGR3AXB6" }],
-        },
-        {
-          id: "d3-4",
-          time: "10:50-11:00",
-          place: "步行至 Grand Front Osaka",
-          note: "步行約 5-10 分鐘抵達 Grand Front Osaka 南館",
-        },
-        {
-          id: "d3-5",
-          time: "11:00-12:00",
-          place: "Grand Front Osaka",
-          note: "自由活動",
-        },
-        {
-          id: "d3-6",
-          time: "12:00-13:30",
-          place: "午餐：梅田周邊商場",
-          note: "・LINKS UMEDA 美食街、阪急三番街、Grand Front 餐廳街",
-        },
-        {
-          id: "d3-7",
-          time: "13:30-16:50",
-          place: "梅田商圈自由活動",
-          note: "・自由購物（LUCUA、阪急、阪神、友都八喜 Yodobashi 等）",
-        },
-        {
-          id: "d3-7-1",
-          time: "16:50-16:55",
-          place: "Grand Front Osaka → 藍天大廈",
-          note: "步行約 5 分鐘",
-        },
-        {
-          id: "d3-9",
-          time: "16:55-18:30",
-          place: "梅田藍天大廈／空中庭園展望台",
-          note: "・日落卡位：務必確認當天日落時刻，建議日落前 30-45 分鐘抵達頂樓有夕陽轉夜景\n・票務備忘：非 2 日連續周遊卡者現場或線上直接購買入場即可",
-        },
-        {
-          id: "d3-9-1",
-          time: "18:30-19:00",
-          place: "藍天大廈 → YAKINIKUEN 忍鬨大阪梅田店",
-          note: "步行約 20 分鐘",
-        },
-        {
-          id: "d3-10",
-          time: "19:00-21:00",
-          place: "YAKINIKUEN 忍鬨大阪梅田店",
-          note: "大阪近年在社群與觀光客圈極具代表性的單點制黑毛和牛燒肉店，以「厚切蔥包牛舌」為核心招牌",
-          links: [{ label: "YAKINIKUEN 忍鬨 大阪梅田店", url: "https://maps.app.goo.gl/i4RsFU54qW2CGZct5" }],
-        },
-        {
-          id: "d3-11",
-          time: "21:00-21:40",
-          place: "梅田（大阪地鐵）→ 難波(大阪Metro地鐵)",
-          note: "這天都是逛街 吃飽飯就早點回去吧 還有力氣的就自行安排",
-          transit: [
-            {
-              from: "梅田（大阪地鐵）",
-              to: "難波(大阪Metro地鐵)",
-              line: "Osaka Metro地鐵御堂筋線",
-              platform: "1 號月台",
-              duration: "約 8-9 分鐘",
-              note: "開往 中百舌鳥 10節編組",
             },
           ],
         },
